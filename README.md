@@ -75,8 +75,8 @@ The ETL process transforms the raw data into the following star schema:
 1.  **Clone the Repository:**
 
     ```bash
-    git clone <your-repo-url>
-    cd <your-repo-name>
+    git clone https://github.com/Aman-Rajput-dev/MovieLens-Analytics-Platform.git
+    cd https://github.com/Aman-Rajput-dev/MovieLens-Analytics-Platform.git
     ```
 
 2.  **Set up Environment:**
