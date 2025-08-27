@@ -1,105 +1,130 @@
-MovieLens Analytics Platform with PySpark
-This project demonstrates an end-to-end data engineering and machine learning pipeline using PySpark. It processes the MovieLens 1M dataset to build a star schema data warehouse, derives analytical insights with Spark SQL, and trains a collaborative filtering model to generate personalized movie recommendations.
 
-Key Features
-End-to-End ETL Pipeline: Ingests, cleans, and transforms over 1 million user ratings from raw .dat files into a structured, query-optimized format.
+-----
 
-Dimensional Data Warehouse: Implements a star schema with 1 fact table and 4 dimension tables, ideal for analytical queries.
+# MovieLens Analytics Platform: ETL, Data Warehouse & Recommendation Engine
 
-In-Depth Data Analysis: Leverages Spark SQL to uncover trends, such as top-rated movies, genre popularity, and user demographics.
+## Overview
 
-Machine Learning Recommender: Builds a movie recommendation engine using PySpark MLlib's Alternating Least Squares (ALS) algorithm, achieving an RMSE of 0.87.
+This project demonstrates an end-to-end data engineering and machine learning pipeline using PySpark. It processes the classic MovieLens 1M dataset, which contains one million movie ratings from 6,040 users for 3,883 movies.
 
-Performance Optimization: Employs Parquet for efficient columnar storage and partitions the primary fact table by year and month to accelerate time-based queries.
+The core of the project involves:
 
-Technical Implementation
-1. ETL and Data Processing
-The pipeline begins by ingesting three raw data files (ratings.dat, users.dat, movies.dat). Using PySpark DataFrames, the semi-structured, ::-delimited text is parsed into structured tables.
+1.  **ETL (Extract, Transform, Load):** Ingesting raw `.dat` files, cleaning and transforming the data.
+2.  **Data Warehousing:** Building a star schema with dimension and fact tables to support efficient analytics.
+3.  **Data Analysis:** Using Spark SQL to query the warehouse and uncover insights.
+4.  **Machine Learning:** Building a collaborative filtering recommendation system to predict user ratings.
 
-Key transformations include:
+The entire pipeline is developed within a PySpark environment, showcasing best practices for distributed data processing, performance optimization, and model building.
 
-Converting the Unix timestamp in ratings.dat to a standard timestamp format.
+## Features
 
-Extracting the movie's release year from its title using regex.
+  * **Robust ETL Pipeline:** Parses semi-structured, `::` delimited text files into structured Spark DataFrames.
+  * **Dimensional Data Model:** Implements a star schema with 4 dimension tables (`dim_movies`, `dim_users`, `dim_genres`, `dim_movie_genres`) and 1 fact table (`fact_ratings`) for optimized analytical queries.
+  * **Performance Optimization:** Employs Parquet as the storage format and partitions the `fact_ratings` table by `year` and `month` to accelerate time-based queries.
+  * **In-depth SQL Analysis:** Includes several analytical queries to identify top-rated movies, genre popularity over time, and most active users.
+  * **Movie Recommendation Engine:** Trains an Alternating Least Squares (ALS) model on the dataset to generate personalized top-5 movie recommendations for each user, achieving an **RMSE of 0.87**.
+  * **Data Quality Assurance:** Includes validation steps to check for nulls and ensure referential integrity between fact and dimension tables.
 
-Exploding the pipe-separated genres string into a normalized, one-to-many format.
+## Tech Stack
 
-2. Data Modeling: Star Schema
-To support efficient analytics, the data is modeled into a star schema. This design separates the core measurements (the "facts") from their descriptive context (the "dimensions").
+  * **Framework:** Apache Spark (via PySpark)
+  * **Language:** Python
+  * **Libraries:**
+      * `pyspark.sql` for data manipulation and ETL.
+      * `pyspark.ml` for building the recommendation model.
+  * **Data Format:** Parquet for curated data storage.
+  * **Environment:** Google Colab / Jupyter Notebook
 
-fact_ratings: The central fact table containing foreign keys to the dimension tables and the core metric (rating). Contains 1,000,209 records.
+## Data Schema
 
-dim_users: Dimension table with descriptive information about each of the 6,040 users (gender, age, occupation).
+The ETL process transforms the raw data into the following star schema:
 
-dim_movies: Dimension table for the 3,883 movies (title, release year).
+#### Fact Table
 
-dim_genres: Dimension table for the 18 unique movie genres.
+  * `fact_ratings`
+      * `user_id` (int)
+      * `movie_id` (int)
+      * `rating` (float)
+      * `rating_ts` (timestamp)
+      * `year` (int) - *Partition Key*
+      * `month` (int) - *Partition Key*
+      * `day` (int)
 
-dim_movie_genres: A bridge table linking movies to genres, containing 6,408 relationships.
+#### Dimension Tables
 
-The final, curated tables are written to disk in the efficient Parquet format and partitioned by year and month for performance.
+  * `dim_movies`
+      * `movie_id` (int)
+      * `title` (string)
+      * `release_year` (int)
+  * `dim_users`
+      * `user_id` (int)
+      * `gender` (string)
+      * `age_code` (int)
+      * `occupation_code` (int)
+      * `zip_code` (string)
+      * `age_bucket` (string)
+  * `dim_genres`
+      * `genre_id` (int)
+      * `genre` (string)
+  * `dim_movie_genres` (Bridge Table)
+      * `movie_id` (int)
+      * `genre_id` (int)
 
-3. Data Analysis with Spark SQL
-With the data warehouse in place, Spark SQL is used to query and analyze the data. The project answers several key business questions:
+## How to Run
 
-What are the highest-rated movies?
+1.  **Clone the Repository:**
 
-Finding: "Seven Samurai" is the top-rated film with an average score of 4.56 (among movies with >100 ratings).
+    ```bash
+    git clone <your-repo-url>
+    cd <your-repo-name>
+    ```
 
-Who are the most active users?
+2.  **Set up Environment:**
+    This project is designed to run in a PySpark environment like Google Colab. Ensure you have PySpark installed.
 
-Finding: User ID 4169 is the most active, having rated 2,314 movies.
+    ```bash
+    pip install pyspark
+    ```
 
-What are the most popular movies by rating count?
+3.  **Run the Notebook:**
+    Open the `Movielens.ipynb` notebook in a Jupyter or Google Colab environment and execute the cells sequentially. The notebook handles:
 
-Finding: "American Beauty" is the most-rated movie with 3,428 total ratings.
+      * Downloading and extracting the MovieLens 1M dataset.
+      * Setting up file paths for raw and curated data.
+      * Executing the ETL and data modeling steps.
+      * Writing the final tables to Parquet files.
+      * Running analytical queries.
+      * Training and evaluating the recommendation model.
 
-4. Recommendation Engine with ALS
-A collaborative filtering model is built to predict user ratings and generate recommendations.
+## Analytical Insights Examples
 
-Algorithm: Alternating Least Squares (ALS) from Spark's MLlib.
+The project answers several key business questions, including:
 
-Training Data: The model was trained on an 80/20 split of the 1M ratings.
+  * **Top 10 Highest-Rated Movies (min. 100 ratings):**
 
-Hyperparameters: rank=20, maxIter=10, regParam=0.1.
+      * Identifies critically acclaimed films like *"Seven Samurai"* (4.56 avg. rating) and *"The Shawshank Redemption"* (4.55 avg. rating).
 
-Performance: The model achieved a Root Mean Square Error (RMSE) of 0.87 on the validation set.
+  * **Most Reviewed Movies:**
 
-Output: The trained model can generate the top 5 movie recommendations for any given user.
+      * Finds films with the highest engagement, such as *"American Beauty"* with 3,428 ratings.
 
-🔧 How to Run
-This project is designed to run in a PySpark environment like Google Colab or a local Jupyter Notebook setup with Spark installed.
+  * **Genre Popularity Over Time:**
 
-Clone the repository:
+      * Analyzes the total number of ratings per genre for each year, showing trends in viewer preferences.
 
-git clone https://github.com/your-username/movielens-pyspark-project.git
-cd movielens-pyspark-project
+  * **Most Active Users:**
 
-Launch the Notebook: Open Movielens.ipynb in your Jupyter or Colab environment.
+      * Identifies power users based on the total number of ratings submitted.
 
-Execute the Cells: Run the notebook cells sequentially. The script will automatically:
+## Machine Learning Model: Recommendation Engine
+* **Algorithm**: 
+    * Alternating Least Squares (ALS), a collaborative filtering method.
 
-Download the MovieLens 1M dataset.
+* **Objective**: 
+    * Predict user ratings for movies they haven't seen.
 
-Execute the entire ETL and data modeling pipeline.
+* **Performance**: 
+    * The model was trained on 80% of the data and achieved an RMSE of 0.87 on the remaining 20% test set, indicating strong predictive accuracy.
 
-Save the curated data warehouse tables.
-
-Perform the SQL-based analysis.
-
-Train and evaluate the ALS recommendation model.
-
-Technologies Used
-Apache Spark:
-
-PySpark API
-
-Spark SQL
-
-Spark MLlib
-
-Python: For scripting and data manipulation.
-
-Pandas: (Implicitly via Spark) for DataFrame concepts.
-
-Jupyter/Google Colab: For interactive development and presentation.
+* **Output**: 
+    * The model can generate the top N movie recommendations for any given user.
